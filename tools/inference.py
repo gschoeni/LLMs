@@ -3,7 +3,7 @@ import argparse
 import os
 
 from llm.datasets.prompt_dataset import PromptDataset
-from llm.models.llms.cerebras import load_model, inference, run_on_dataset
+from llm.models.llms.cerebras import load_model, run_on_dataset
 from llm.models.tokenizers.cerebras import load_tokenizer
 
 
@@ -23,13 +23,9 @@ def main():
 
     print(f"Loading model...")
     model = load_model(args.model)
-    
-    
-    results = run_on_dataset(model, tokenizer, dataset, device="cpu")
+
+    results = run_on_dataset(model, tokenizer, dataset, args.output, device="cpu")
     print(f"Ran on {len(results)} examples")
-    
-    # result = inference(model, tokenizer, args.data, device="cpu")
-    # print(result)
     
 
 if __name__ == "__main__":

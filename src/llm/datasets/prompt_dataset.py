@@ -1,4 +1,5 @@
 import torch
+import pandas as pd
 
 class PromptDataset(torch.utils.data.Dataset):
     def __init__(self, tokenizer, prompts_file: str,):
@@ -13,15 +14,10 @@ class PromptDataset(torch.utils.data.Dataset):
         return len(self.items['input_ids'])
     
     def _load_file(self, prompts_file: str,):
-        self.lines = []
+        print(f"Loading prompts from {prompts_file}...")
+        df = pd.read_parquet(prompts_file, engine='pyarrow')
+        lines = df['prompt'].tolist()
         self.items = []
-        with open(prompts_file, 'r') as f:
-            print(f"Loading prompts from {prompts_file}...")
-            for line in f:
-                line = line.strip()
-                if len(line) == 0:
-                    continue
-                self.lines.append(line.strip())
-            
-            print(f"Tokenizing {len(self.lines)} prompts...")
-            self.items = self.tokenizer(self.lines, truncation=True, padding=True)
+
+        print(f"Tokenizing {len(lines)} prompts...")
+        self.items = self.tokenizer(lines, truncation=True, padding=True)

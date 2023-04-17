@@ -51,7 +51,13 @@ def run_on_dataset(
         output = model.generate(input_ids, max_new_tokens=512, attention_mask=attention_mask, do_sample=False, no_repeat_ngram_size=2, early_stopping=True)
         # print(output)
         for i in range(len(output)):
-            prompt = tokenizer.decode(input_ids[i], attention_mask=attention_mask[i], skip_special_tokens=True)
+            # Multiply the attention mask by the input ids to get zero out the padding tokens
+            trimmed_prompt = torch.mul(input_ids[i], attention_mask[i])
+            # Then squeeze out the zero tokens to get the actual length of the prompt
+            trimmed_prompt = trimmed_prompt[trimmed_prompt.nonzero().squeeze()]
+
+            # Decode the prompt and completion
+            prompt = tokenizer.decode(trimmed_prompt, skip_special_tokens=True)
             completion = tokenizer.decode(output[i][len(input_ids[i]):-1], skip_special_tokens=True).strip()
             
             print("====================")

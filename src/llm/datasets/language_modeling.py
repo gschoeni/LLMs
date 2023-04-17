@@ -1,5 +1,5 @@
 
-from oxen.models.tokenizers.cerebras import tokenize
+from llm.models.tokenizers.cerebras import tokenize
 
 def generate_prompt(data_point):
     return f"Question: {data_point['Question']}\nAnswer: {data_point['Answer']}"

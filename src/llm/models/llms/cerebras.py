@@ -8,20 +8,20 @@ import json
 
 from llm.datasets.prompt_dataset import PromptDataset
 
-def load_model(model_ckpt: str, device_map: str="auto") -> AutoModelForCausalLM:
+def load_model(model_ckpt: str, device: str="cuda") -> AutoModelForCausalLM:
     quantization_config = BitsAndBytesConfig(llm_int8_enable_fp32_cpu_offload=True)
 
     model = AutoModelForCausalLM.from_pretrained(
         model_ckpt,
         load_in_8bit=True,
-        torch_dtype=torch.float32,
-        device_map=device_map,
+        torch_dtype=torch.float16 if device == "cuda" else torch.float32,
+        device_map="auto",
         quantization_config=quantization_config
     )
     model = prepare_model_for_int8_training(model)
     return model
 
-def inference(model: AutoModelForCausalLM, tokenizer: AutoTokenizer, prompt: str, device: str="cpu") -> str:
+def inference(model: AutoModelForCausalLM, tokenizer: AutoTokenizer, prompt: str, device: str="cuda") -> str:
     model.to(device)
     model.eval()
     input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)

@@ -15,6 +15,7 @@ def main():
     parser.add_argument('-d', '--data', required=True)
     parser.add_argument('-m', '--model', required=True)
     parser.add_argument('-o', '--output', required=True)
+    parser.add_argument('--device', default="cuda")
     args = parser.parse_args()
 
     print(f"Loading data from {args.data}")
@@ -24,7 +25,7 @@ def main():
     print(f"Loading model...")
     model = load_model(args.model)
 
-    results = run_on_dataset(model, tokenizer, dataset, args.output, device="cpu")
+    results = run_on_dataset(model, tokenizer, dataset, args.output, device=args.device)
     print(f"Ran on {len(results)} examples")
     
 

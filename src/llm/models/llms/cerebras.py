@@ -51,7 +51,7 @@ def run_on_dataset(
         output = model.generate(input_ids, max_new_tokens=512, attention_mask=attention_mask, do_sample=False, no_repeat_ngram_size=2, early_stopping=True)
         # print(output)
         for i in range(len(output)):
-            prompt = tokenizer.decode(input_ids[i], skip_special_tokens=True)
+            prompt = tokenizer.decode(input_ids[i], attention_mask=attention_mask[i], skip_special_tokens=True)
             completion = tokenizer.decode(output[i][len(input_ids[i]):-1], skip_special_tokens=True).strip()
             
             print("====================")

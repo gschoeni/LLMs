@@ -27,7 +27,9 @@ def load_model(
 
 
 def decode_output(tokenizer, input_ids, output_ids) -> str:
-    return str(tokenizer.decode(output_ids[len(input_ids) : -1], skip_special_tokens=True))
+    return str(
+        tokenizer.decode(output_ids[len(input_ids) : -1], skip_special_tokens=True)
+    )
 
 
 def inference(

@@ -8,23 +8,9 @@ def train(
     model,
     train_data,
     eval_data=None,
-    enable_wandb: bool = False,
     output_dir: str = "output",
     load_checkpoint: str | None = None,
 ):
-    # print("Training... with wandb: ", enable_wandb)
-    # if enable_wandb:
-    #     import wandb
-    #     wandb_run_name = f"{wandb.util.generate_id()}"
-
-    #     # set the wandb project where this run will be logged
-    #     os.environ["WANDB_PROJECT"]="cerebras-fine-tune"
-
-    #     # save your trained model checkpoint to wandb
-    #     os.environ["WANDB_LOG_MODEL"]="true"
-
-    #     # turn off watch to log faster
-    #     os.environ["WANDB_WATCH"]="false"
 
     training_args = transformers.TrainingArguments(
         per_device_train_batch_size=16,
@@ -41,8 +27,6 @@ def train(
         save_steps=200,
         output_dir=output_dir,
         save_total_limit=3,
-        # report_to="wandb" if enable_wandb else None,
-        # run_name=wandb_run_name if enable_wandb else None,
     )
 
     trainer = transformers.Trainer(
@@ -64,7 +48,3 @@ def train(
 
     trainer.train(load_checkpoint)
     model.save_pretrained(output_dir)
-
-    # if enable_wandb:
-    #     import wandb
-    #     wandb.finish()

@@ -7,7 +7,9 @@ def train(
     tokenizer,
     model,
     train_data,
-    eval_data=None,
+    epochs: int = 3,
+    save_steps: int = 200,
+    device: str = "cuda",
     output_dir: str = "output",
     load_checkpoint: str | None = None,
 ):
@@ -15,16 +17,13 @@ def train(
     training_args = transformers.TrainingArguments(
         per_device_train_batch_size=16,
         gradient_accumulation_steps=8,
-        num_train_epochs=3,
+        num_train_epochs=epochs,
         learning_rate=1e-4,
-        # fp16=True,
-        fp16=False,
+        fp16=True if device == "cuda" else False,
         optim="adamw_torch",
         logging_steps=10,
-        # evaluation_strategy="steps",
         save_strategy="steps",
-        # eval_steps=200,
-        save_steps=200,
+        save_steps=save_steps,
         output_dir=output_dir,
         save_total_limit=3,
     )
@@ -32,7 +31,7 @@ def train(
     trainer = transformers.Trainer(
         model=model,
         train_dataset=train_data,
-        eval_dataset=eval_data,
+        eval_dataset=None,
         args=training_args,
         data_collator=transformers.DataCollatorForSeq2Seq(
             tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True

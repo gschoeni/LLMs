@@ -17,7 +17,9 @@ def main():
     parser.add_argument("-m", "--model", required=True)
     parser.add_argument("-d", "--train_data", required=True)
     parser.add_argument("-o", "--output", required=True)
-    parser.add_argument("--device", default="auto")
+    parser.add_argument("-e", "--epochs", type=int, default=3)
+    parser.add_argument("-s", "--save_steps", type=int, default=200)
+    parser.add_argument("--device", default="cuda")
     args = parser.parse_args()
 
     tokenizer = load_cerebras_tokenizer(args.model)
@@ -33,7 +35,15 @@ def main():
     model = load_cerebras_model(args.model, tokenizer, device=args.device)
     model = load_lora_model(model)
 
-    finetune_cerebras(tokenizer, model, train_data, output_dir=args.output)
+    finetune_cerebras(
+        tokenizer,
+        model,
+        train_data,
+        output_dir=args.output,
+        device=args.device,
+        epochs=args.epochs,
+        save_steps=args.save_steps,
+    )
 
 
 if __name__ == "__main__":

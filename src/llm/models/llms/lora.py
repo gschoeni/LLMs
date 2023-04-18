@@ -1,11 +1,6 @@
-
 from typing import List
 
-from peft import (
-    LoraConfig,
-    get_peft_model,
-    PeftModel
-)
+from peft import LoraConfig, get_peft_model, PeftModel
 
 
 def load_model(

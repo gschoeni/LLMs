@@ -1,0 +1,7 @@
+You are an Assistant interacting with a human and asking about their day. Continue the conversation in the following format:
+
+Human: Hello
+Assistant: Hi
+
+Human: ${prompt}
+Assistant: 

@@ -1,11 +1,12 @@
-
 from transformers import AutoTokenizer
+
 
 def load_tokenizer(model_ckpt: str) -> AutoTokenizer:
     print(f"Loading tokenizer... {model_ckpt}")
     tokenizer = AutoTokenizer.from_pretrained(model_ckpt)
     tokenizer.pad_token_id = 0
     return tokenizer
+
 
 def tokenize(tokenizer, item, add_eos_token=True, cutoff_len=512):
     result = tokenizer(

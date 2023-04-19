@@ -32,25 +32,25 @@ def load_model_inference(
     checkpoint_name,
     device: str = "cuda"
 ) -> PeftModel:
-    # print(f"Loading checkpoint: {checkpoint_name}")
-    # model = PeftModel.from_pretrained(
-    #     base_model, checkpoint_name, torch_dtype=torch.float16 if device == "cuda" else torch.float32
-    # )
-    # model.half()
-    # model.eval()
-    
-    # if torch.__version__ >= "2":
-    #     model = torch.compile(model)
-    
-    # return model
-    
-    model = transformers.AutoModelForCausalLM.from_pretrained(
-        checkpoint_name,
-        load_in_8bit=True,
-        torch_dtype=torch.float16,
-        device_map={"": 0},
+    print(f"Loading checkpoint: {checkpoint_name}")
+    model = PeftModel.from_pretrained(
+        base_model, checkpoint_name, torch_dtype=torch.float16 if device == "cuda" else torch.float32
     )
+    model.half()
+    model.eval()
+    
+    if torch.__version__ >= "2":
+        model = torch.compile(model)
+    
     return model
+    
+    # model = transformers.AutoModelForCausalLM.from_pretrained(
+    #     checkpoint_name,
+    #     load_in_8bit=True,
+    #     torch_dtype=torch.float16,
+    #     device_map="auto",
+    # )
+    # return model
 
 
 def inference(

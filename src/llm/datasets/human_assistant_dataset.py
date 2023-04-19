@@ -61,7 +61,8 @@ def parse_file(input_file: str) -> List[dict]:
                         }
                     # print(i,j)
                     # print(data)
-                    examples.append(data)
+                    if len(data['prompt']) + len(data['response']) < 512:
+                        examples.append(data)
 
         # print("END =====================================")
         # if len(examples) > 10:

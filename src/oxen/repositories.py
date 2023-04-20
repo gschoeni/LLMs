@@ -45,7 +45,7 @@ class Repository(object):
     def _post_request(self, url: str, data: dict) -> dict:
         headers = {'Authorization': f'Bearer {self.api_key}', 'Content-Type': 'application/json', 'user-agent': 'Oxen/python-client'}
         print(f'POST {url} {data} {headers}')
-        response = requests.post(url, data=data, headers=headers)
+        response = requests.post(url, json=data, headers=headers)
         response.raise_for_status()
         return response.json()
 

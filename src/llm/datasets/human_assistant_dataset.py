@@ -37,12 +37,9 @@ def parse_file(input_file: str) -> List[dict]:
         #         print(f"Assistant: {split_prompt[i]}")
         # print("=====================================")
 
-        # if len(split_prompt) == 2:
-        #     prompt = split_prompt[0]
-        #     data = {"prompt": prompt, "response": f"Assistant: {response}"}
-        #     print(data)
-        #     examples.append(data)
-        # else:
+        if len(split_prompt) > 2:
+            continue
+
         for i in range(len(split_prompt)):
             prompt = "Human: "
             for j in range(i + 1):

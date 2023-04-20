@@ -2,41 +2,46 @@ import gradio as gr
 import asyncio
 import argparse
 
-from llm.models.tokenizers.flan_t5 import load_tokenizer
-from llm.models.llms.flan_t5 import inference, load_model
+# from llm.models.tokenizers.flan_t5 import load_tokenizer
+# from llm.models.llms.flan_t5 import inference, load_model
+
+from llm.models.tokenizers.cerebras import load_tokenizer
+from llm.models.llms.cerebras import inference, load_model
 
 from oxen.repositories import Repository
 from oxen.branches import Branch
 
 async def main():
     parser = argparse.ArgumentParser(prog="UI for evaluating a LLM")
+    parser.add_argument("-b", "--base_model", required=True)
     parser.add_argument("-m", "--model", required=True)
     parser.add_argument("-d", "--device", default="cuda")
     parser.add_argument("--host", default="hub.oxen.ai")
-    parser.add_argument("--repo", type=str, default=None)
-    parser.add_argument("--branch", type=str, default=None)
+    parser.add_argument("--repo", type=str, required=True)
+    parser.add_argument("--branch", type=str, required=True)
+    parser.add_argument("--file", type=str, required=True)
     parser.add_argument("--share", default=False)
     args = parser.parse_args()
 
-    tokenizer = load_tokenizer(args.model)
+    tokenizer = load_tokenizer(args.base_model)
     model = load_model(args.model, tokenizer, device=args.device)
 
     async def predict(text, session_state, history=[]):
         print(f"Text: {text}")
         response = inference(model, tokenizer, text)
         history.append((text, response))
-        print(f"History in gradio:")
-        for (i, o) in history:
-            print(f"Human: {i}")
-            print(f"AI: {o}")
 
+        last_message = {"prompt": text, "response": response}
+        print(f"last message: {last_message}")
+        
         session_state["history"] = history
+        session_state["last_message"] = last_message
 
         return history, gr.Textbox.update(value="")
 
     def maybe_save_row(row: dict):
         if args.repo is not None:
-            file = "demo.parquet"
+            file = args.file
             repo = Repository(args.repo, host=args.host)
             branch = repo.get_branch_by_name(args.branch)
             repo.add_row(branch, file, row)
@@ -44,21 +49,21 @@ async def main():
     async def upvote_response(session_state):
         print("upvote_response")
         history = session_state["history"]
-        for (i, o) in history:
-            print(f"Human: {i}")
-            print(f"AI: {o}")
-            maybe_save_row({"prompt": i, "response": o, "upvote": True})
+        
+        last_message = session_state["last_message"]
+        last_message["upvote"] = True
+        maybe_save_row(last_message)
+
         return history, gr.Textbox.update(value="")
 
     async def downvote_response(session_state):
         print("downvote_response")
         history = session_state["history"]
 
-        for (i, o) in history:
-            print(f"Human: {i}")
-            print(f"AI: {o}")
-            maybe_save_row({"prompt": i, "response": o, "upvote": False})
-
+        last_message = session_state["last_message"]
+        last_message["upvote"] = False
+        maybe_save_row(last_message)
+        
         if len(history) > 0:
             last_interaction = history.pop()
             print(last_interaction)

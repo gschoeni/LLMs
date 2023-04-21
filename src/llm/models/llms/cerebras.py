@@ -3,77 +3,55 @@ import torch
 from torch.utils.data import DataLoader
 from peft import prepare_model_for_int8_training
 from tqdm import tqdm
-import json
-import transformers
 
 from llm.datasets.prompt_dataset import PromptDataset
 
+from llm.models.llms.hf_transformer import HFTransformer
 
-def load_model(
-    model_ckpt: str, tokenizer: AutoTokenizer, device: str = "cuda"
-) -> AutoModelForCausalLM:
-    quantization_config = BitsAndBytesConfig(llm_int8_enable_fp32_cpu_offload=True)
+class CerebrasLLM(HFTransformer):
+    def __init__(self, model_ckpt: str, device: str = "cuda", prepare_for_8_bit=False):
+        super(CerebrasLLM, self).__init__()
+        self.tokenizer = self._load_tokenizer(model_ckpt)
+        self.model = self._load_model(model_ckpt, device=device)
 
-    model = AutoModelForCausalLM.from_pretrained(
-        model_ckpt,
-        load_in_8bit=True,
-        torch_dtype=torch.float16 if device == "cuda" else torch.float32,
-        device_map="auto",
-        quantization_config=quantization_config,
-        pad_token_id=tokenizer.eos_token_id,
-    )
-    model = prepare_model_for_int8_training(model)
-    return model
+    def _load_model(
+        self,
+        model_ckpt: str,
+        device: str = "cuda",
+        prepare_for_8_bit=False
+    ) -> AutoModelForCausalLM:
+        quantization_config = BitsAndBytesConfig(llm_int8_enable_fp32_cpu_offload=True)
 
-
-def decode_output(tokenizer, input_ids, output_ids) -> str:
-    return str(
-        tokenizer.decode(output_ids[len(input_ids) : -1], skip_special_tokens=True)
-    )
-
-
-def inference(
-    model: AutoModelForCausalLM,
-    tokenizer: AutoTokenizer,
-    prompt: str,
-    device: str = "cuda",
-) -> str:
-    model.to(device)
-    model.eval()
-    tokens = tokenizer(prompt, padding=False, return_tensors="pt").to(device)
-    input_ids = tokens["input_ids"]
-    attention_mask = tokens["attention_mask"]
-
-    generation_config = transformers.GenerationConfig(
-        max_new_tokens=100,
-        temperature=0.2,
-        top_p=0.75,
-        top_k=50,
-        repetition_penalty=1.2,
-        do_sample=False,
-        early_stopping=True,
-        num_beams=5,
-        pad_token_id=model.config.pad_token_id,
-        eos_token_id=model.config.eos_token_id,
-    )
-
-    output_ids = model.generate(
-        input_ids, attention_mask=attention_mask, generation_config=generation_config
-    )
-    return decode_output(tokenizer, input_ids[0], output_ids[0]).strip()
+        model = AutoModelForCausalLM.from_pretrained(
+            model_ckpt,
+            load_in_8bit=True,
+            torch_dtype=torch.float16 if device == "cuda" else torch.float32,
+            device_map="auto",
+            quantization_config=quantization_config,
+            pad_token_id=self.tokenizer.eos_token_id,
+        )
+        model = prepare_model_for_int8_training(model)
+        return model
+    
+    def _load_tokenizer(
+        self,
+        model_ckpt: str
+    ) -> AutoTokenizer:
+        tokenizer = AutoTokenizer.from_pretrained(model_ckpt)
+        tokenizer.pad_token_id = 0
+        return tokenizer
 
 
 def run_on_dataset(
-    model: AutoModelForCausalLM,
-    tokenizer: AutoTokenizer,
+    self,
     dataset: PromptDataset,
     output_file: str,
     device: str = "cpu",
 ):
     print(f"Writing to {output_file}")
     f = open(output_file, "w")
-    model.to(device)
-    model.eval()
+    self.model.to(device)
+    self.model.eval()
 
     print(f"Dataset len {len(dataset)}")
     train_loader = DataLoader(dataset, batch_size=8)
@@ -83,7 +61,8 @@ def run_on_dataset(
         input_ids = batch["input_ids"].to(device)
         attention_mask = batch["attention_mask"].to(device)
 
-        output_ids = model.generate(
+        # Generate predictions on batch
+        output_ids = self.model.generate(
             input_ids,
             max_new_tokens=512,
             attention_mask=attention_mask,
@@ -99,8 +78,8 @@ def run_on_dataset(
             trimmed_prompt = trimmed_prompt[trimmed_prompt.nonzero().squeeze()]
 
             # Decode the prompt and completion
-            prompt = tokenizer.decode(trimmed_prompt, skip_special_tokens=True)
-            completion = decode_output(tokenizer, input_ids[i], output_ids[i])
+            prompt = self.tokenizer.decode(trimmed_prompt, skip_special_tokens=True)
+            completion = self.decode_output(input_ids[i], output_ids[i])
 
             print("====================")
             print(f"Prompt: {prompt}")

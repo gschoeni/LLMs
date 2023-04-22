@@ -1,2 +1,11 @@
 accelerate
+argparse
 bitsandbytes
+gradio
+peft
+langchain
+sentencepiece
+torch
+torchvision
+torchaudio
+transformers

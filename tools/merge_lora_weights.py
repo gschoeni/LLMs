@@ -1,4 +1,3 @@
-import os
 
 import torch
 import transformers
@@ -18,8 +17,6 @@ def main():
     args = parser.parse_args()
     BASE_MODEL = args.base_model
 
-    tokenizer = transformers.AutoTokenizer.from_pretrained(BASE_MODEL)
-
     base_model = transformers.AutoModelForCausalLM.from_pretrained(
         BASE_MODEL,
         load_in_8bit=False,
@@ -28,7 +25,7 @@ def main():
     )
 
     first_weight = base_model.transformer.h[0].attn.c_attn.weight
-    first_weight_old = first_weight.clone()
+    # first_weight_old = first_weight.clone()
 
     lora_model = PeftModel.from_pretrained(
         base_model,
@@ -37,27 +34,29 @@ def main():
         torch_dtype=torch.float16,
     )
 
-    lora_weight = lora_model.base_model.transformer.h[0].attn.c_attn.weight
+    lora_model = lora_model.merge_and_unload()
 
-    assert torch.allclose(first_weight_old, first_weight)
+    merged_weight = lora_model.transformer.h[0].attn.c_attn.weight
 
-    # merge weights
-    for layer in lora_model.base_model.transformer.h:
-        layer.attn.c_attn.merge_weights = True
+    # assert torch.allclose(first_weight_old, first_weight)
 
-    lora_model.train(False)
+    # # merge weights
+    # for layer in lora_model.base_model.transformer.h:
+    #     layer.attn.c_attn.merge_weights = True
+
+    # lora_model.train(False)
 
     # did we do anything?
-    assert not torch.allclose(first_weight_old, first_weight)
+    assert not torch.allclose(first_weight, merged_weight)
 
-    lora_model_sd = lora_model.state_dict()
-    deloreanized_sd = {
-        k.replace("base_model.model.", ""): v
-        for k, v in lora_model_sd.items()
-        if "lora" not in k
-    }
+    # lora_model_sd = lora_model.state_dict()
+    # deloreanized_sd = {
+    #     k.replace("base_model.model.", ""): v
+    #     for k, v in lora_model_sd.items()
+    #     if "lora" not in k
+    # }
 
-    base_model.save_pretrained(args.output, state_dict=deloreanized_sd, max_shard_size="12GB")
+    lora_model.save_pretrained(args.output, max_shard_size="12GB")
 
 if __name__ == "__main__":
     main()

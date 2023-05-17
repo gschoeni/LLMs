@@ -1,7 +1,9 @@
 accelerate
 argparse
 bitsandbytes
+datasets
 gradio
+mako
 peft
 langchain
 sentencepiece

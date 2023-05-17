@@ -6,6 +6,7 @@ class HFTransformer(LLM):
     def __init__(self):
         self.model = None
         self.tokenizer = None
+        self.device = "cuda"
 
     def _decode_output(self, input_ids, output_ids) -> str:
         if self.tokenizer is None:
@@ -20,6 +21,9 @@ class HFTransformer(LLM):
     ) -> str:
         self.model.eval()
         tokens = self.tokenizer(prompt, padding=False, return_tensors="pt")
+        if self.device == "cuda":
+            tokens = tokens.to(self.device)
+
         print("tokens")
         print(tokens)
         input_ids = tokens["input_ids"]
@@ -39,7 +43,7 @@ class HFTransformer(LLM):
         )
 
         output_ids = self.model.generate(
-            input_ids, attention_mask=attention_mask, generation_config=generation_config
+            input_ids=input_ids, attention_mask=attention_mask, generation_config=generation_config
         )
         print("output_ids")
         print(output_ids)

@@ -15,7 +15,7 @@ def train(
 ):
 
     training_args = transformers.TrainingArguments(
-        per_device_train_batch_size=16,
+        per_device_train_batch_size=4,
         gradient_accumulation_steps=8,
         num_train_epochs=epochs,
         learning_rate=1e-4,
@@ -40,10 +40,10 @@ def train(
 
     model.config.use_cache = False
 
-    old_state_dict = model.state_dict
-    model.state_dict = (
-        lambda self, *_, **__: get_peft_model_state_dict(self, old_state_dict())
-    ).__get__(model, type(model))
+    # old_state_dict = model.state_dict
+    # model.state_dict = (
+    #     lambda self, *_, **__: get_peft_model_state_dict(self, old_state_dict())
+    # ).__get__(model, type(model))
 
     trainer.train(load_checkpoint)
     model.save_pretrained(output_dir)

@@ -5,20 +5,20 @@ from peft import prepare_model_for_int8_training
 from tqdm import tqdm
 
 from llm.datasets.prompt_dataset import PromptDataset
-
 from llm.models.llms.hf_transformer import HFTransformer
 
+import json
+
 class CerebrasLLM(HFTransformer):
-    def __init__(self, model_ckpt: str, device: str = "cuda", prepare_for_8_bit=False):
+    def __init__(self, model_ckpt: str, device: str = "cuda"):
         super(CerebrasLLM, self).__init__()
-        self.tokenizer = self._load_tokenizer(model_ckpt)
+        self.tokenizer = self._load_tokenizer('cerebras/Cerebras-GPT-2.7B')
         self.model = self._load_model(model_ckpt, device=device)
 
     def _load_model(
         self,
         model_ckpt: str,
         device: str = "cuda",
-        prepare_for_8_bit=False
     ) -> AutoModelForCausalLM:
         quantization_config = BitsAndBytesConfig(llm_int8_enable_fp32_cpu_offload=True)
 

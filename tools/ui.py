@@ -35,8 +35,8 @@ async def main():
     async def predict(text, session_state, history=[]):
         print(f"Text: {text}")
         
-        # prompt = instruction + "\nHuman: " + text + "\nAssistant: "
-        prompt = text
+        prompt = instruction + "\nHuman: " + text + "\nAssistant: "
+        # prompt = text
 
         start = time.time()
         response = model(prompt)

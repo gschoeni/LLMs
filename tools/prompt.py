@@ -1,8 +1,7 @@
 import argparse
 from mako.template import Template
 
-from llm.models.llms.cerebras import load_model, inference
-from llm.models.tokenizers.cerebras import load_tokenizer
+from llm.models.llms.factory import get_model
 
 
 def read_prompt(prompt_file: str):
@@ -26,8 +25,7 @@ def main():
     args = parser.parse_args()
 
     print(f"Loading model...")
-    tokenizer = load_tokenizer(args.model)
-    model = load_model(args.model, tokenizer, device=args.device)
+    llm = get_model(args.model)
 
     print(f"====Input====")
     prompt_template_str = read_prompt(args.prompt)
@@ -35,7 +33,7 @@ def main():
     prompt = prompt_template.render(prompt=args.input)
 
     print(prompt)
-    output = inference(model, tokenizer, prompt, device=args.device)
+    output = llm(prompt)
     print(f"====Output====")
     print(output)
 
